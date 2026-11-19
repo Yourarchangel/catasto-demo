@@ -3,6 +3,8 @@
 import type { Folder, Household, Role } from "./types";
 
 export const isJoined = (h: Household, r: Role) => h.members[r].status === "joined";
+// Households that show up on your list when you "view as" a role (demo only).
+export const isMine = (h: Household, r: Role) => isJoined(h, r) && !h.members[r].someoneElse;
 
 // R1 + R6: the client must have joined and signed the general consent before
 // any professional sees anything outside their own workspace.
@@ -15,6 +17,7 @@ export function canView(h: Household, r: Role, f: Folder): boolean {
   if (f.owner === r) return true; // your own workspace
   if (!consentSigned(h)) return false;
   if (!isJoined(h, f.owner)) return false;
+  if (f.owner === "adviser" && !h.adviserShares) return false; // adviser locked the workspace
   if (h.consent!.sweeping) return true; // general consent between professionals
   return f.grants.includes(r); // R2: only what the client approved
 }

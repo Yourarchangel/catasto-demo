@@ -20,6 +20,9 @@ export interface Member {
   phone?: string;
   invite?: Invite;
   joinedAt?: string;
+  // Demo only: a different person in this role than the one you "view as".
+  // (The Okafor and Brennan clients are not Priya Harper.)
+  someoneElse?: boolean;
 }
 
 // invites: a one-use, 7-day join link
@@ -99,6 +102,9 @@ export interface Household {
   createdAt: string;
   members: Record<Role, Member>;
   consent?: GeneralConsent;
+  // Adviser setting. On by default: the adviser's workspace is open to the team the client approves.
+  // Off locks it to the adviser and the client. The adviser can only lock, never grant.
+  adviserShares: boolean;
   folders: Folder[];
   files: FileItem[];
   requests: AccessRequest[];
@@ -114,7 +120,8 @@ export interface DemoState {
   view: Role; // whose screen we are looking at (demo only)
   adviserAuth: AdviserAuth;
   adviser: { name: string; email: string; firm: string };
+  adviserShares: boolean; // adviser setting, applies to every household
   households: Household[];
-  openHouseholdId?: string; // per demo, the household being viewed
+  open: Partial<Record<Role, string>>; // which household each view has open (demo only)
   n: number; // id counter
 }

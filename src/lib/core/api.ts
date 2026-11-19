@@ -44,7 +44,7 @@ export const startPart = (p: 1 | 2) => {
   emit();
 };
 export const setView = (r: Role) => update((s) => void (s.view = r));
-export const openHousehold = (hid?: string) => update((s) => void (s.openHouseholdId = hid));
+export const openHousehold = (hid?: string) => update((s) => void (s.open[s.view] = hid));
 
 // ---------- identity (sign-in + MFA) ----------
 export const adviserPassword = () => update((s) => void (s.adviserAuth = "mfa"));
@@ -60,6 +60,7 @@ export function createHousehold(input: { name: string; clientName: string; email
       name: input.name,
       createdAt: now(),
       members: emptyMembers(),
+      adviserShares: s.adviserShares,
       folders: defaultFolders(newId),
       files: [],
       requests: [],
@@ -93,6 +94,8 @@ export function join(hid: string, role: Role, person: { name: string; email: str
     const m = h.members[role];
     if (m.status !== "invited" || !m.invite || m.invite.usedAt) return log(h, role, "join", "invite already used", "denied");
     h.members[role] = { ...m, ...person, status: "joined", joinedAt: now(), invite: { ...m.invite, usedAt: now() } };
+    // the adviser's workspace is open to the team by default; only the client can take that back
+    if (role !== "client") h.folders.forEach((f) => f.owner === "adviser" && !f.grants.includes(role) && f.grants.push(role));
     // everyone who has joined shares one team thread
     const team = h.threads.find((t) => t.title === "Whole team");
     const joined = (Object.keys(h.members) as Role[]).filter((r) => h.members[r].status === "joined");
@@ -100,6 +103,16 @@ export function join(hid: string, role: Role, person: { name: string; email: str
     else if (joined.length > 1) h.threads.unshift({ id: id("t"), members: joined, title: "Whole team" });
     log(h, role, "joined household");
   });
+}
+
+// Someone who already has a Catasto account (a CPA or attorney in another household)
+// accepts a new invite without signing up again.
+export function acceptInvite(hid: string, role: Role) {
+  const other = state.households.find((h) => h.members[role].status === "joined" && !h.members[role].someoneElse);
+  const m = other?.members[role];
+  const h = state.households.find((x) => x.id === hid);
+  const person = { name: m?.name || h?.members[role].name || "", email: m?.email || h?.members[role].email || "", phone: m?.phone || "" };
+  join(hid, role, person);
 }
 
 // ---------- consent ----------
@@ -151,13 +164,27 @@ export function decide(hid: string, by: Role, requestId: string, approve: boolea
   });
 }
 
+// ---------- adviser settings ----------
+// The adviser can lock their workspace (off) or keep it open to the team (on, the default).
+// This only ever narrows access. Granting stays with the client.
+export function setAdviserSharing(on: boolean) {
+  update((s) => {
+    s.adviserShares = on;
+    s.households.forEach((h) => {
+      h.adviserShares = on;
+      log(h, "adviser", on ? "opened workspace to the team" : "locked workspace");
+    });
+  });
+}
+
 // ---------- folders and files ----------
 export function createFolder(hid: string, by: Role, name: string, shareWith: Role[]) {
   withHousehold(hid, (h) => {
     const f = { id: id("f"), owner: by, name, grants: [] as Role[] };
+    if (by === "adviser") f.grants = (["cpa", "attorney"] as Role[]).filter((r) => h.members[r].status === "joined");
     h.folders.push(f);
     log(h, by, "created folder", name);
-    for (const r of shareWith) {
+    for (const r of by === "adviser" ? [] : shareWith) {
       if (r === by || r === "client") continue;
       if (by === "client") f.grants.push(r); // the client decides directly
       else if (!h.consent?.sweeping) h.requests.push({ id: id("q"), folderId: f.id, forRole: r, requestedBy: by, at: now(), status: "pending" });

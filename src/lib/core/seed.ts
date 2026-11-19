@@ -28,7 +28,7 @@ export function defaultFolders(prefix: string) {
 
 // Part 1: nothing set up. The adviser is signed out.
 export function part1(): DemoState {
-  return { part: 1, view: "adviser", adviserAuth: "signed-out", adviser: ADVISER, households: [], n: 1 };
+  return { part: 1, view: "adviser", adviserAuth: "signed-out", adviser: ADVISER, adviserShares: true, households: [], open: {}, n: 1 };
 }
 
 // Part 2: a whole team is set up and working.
@@ -40,6 +40,7 @@ export function part2(): DemoState {
     createdAt: day(2),
     members: { adviser: joined("adviser", 2), client: joined("client", 3), cpa: joined("cpa", 4), attorney: joined("attorney", 5) },
     consent: { typedName: "Priya Harper", signedAt: day(3), sweeping: false },
+    adviserShares: true,
     folders: [
       { id: "f-plan", owner: "adviser", name: "Plan documents", grants: ["cpa", "attorney"] },
       { id: "f-stmt", owner: "client", name: "Statements", grants: ["adviser", "cpa"] },
@@ -80,15 +81,67 @@ export function part2(): DemoState {
     ],
     audit: [],
   };
-  const other = (id: string, name: string, d: number): Household => ({
-    id, name, createdAt: day(d), members: emptyMembers(), folders: defaultFolders(id), files: [], requests: [], threads: [], messages: [], audit: [],
-  });
+  // Two more households. The CPA and the Attorney each work with more than one family.
+  const signed = (d: number) => ({ typedName: "", signedAt: day(d), sweeping: false });
+  const okafor: Household = {
+    id: "h-okafor",
+    name: "Okafor household",
+    createdAt: day(9),
+    members: {
+      adviser: joined("adviser", 9),
+      client: { status: "joined", name: "Amara Okafor", email: "amara@okafor.example", phone: "(214) 555-0129", joinedAt: day(9), someoneElse: true },
+      cpa: joined("cpa", 10),
+      attorney: { status: "none" },
+    },
+    consent: { ...signed(9), typedName: "Amara Okafor" },
+    adviserShares: true,
+    folders: [
+      { id: "o-adviser", owner: "adviser", name: "Plan documents", grants: ["cpa"] },
+      { id: "o-client", owner: "client", name: "Statements", grants: ["cpa"] },
+      { id: "o-cpa", owner: "cpa", name: "Tax returns", grants: [] },
+      { id: "o-attorney", owner: "attorney", name: "Estate documents", grants: [] },
+    ],
+    files: [
+      { id: "ox1", folderId: "o-client", name: "2025 W-2.pdf", size: "120 KB", uploadedBy: "client", at: day(10), sampleId: "w2" },
+      { id: "ox2", folderId: "o-cpa", name: "2025 Form 1040.pdf", size: "2.4 MB", uploadedBy: "cpa", at: day(12), sampleId: "1040" },
+    ],
+    requests: [],
+    threads: [{ id: "o-team", members: ["adviser", "client", "cpa"], title: "Whole team" }],
+    messages: [{ id: "om1", threadId: "o-team", by: "cpa", text: "Return is filed. Copy is in my workspace.", at: day(12, 15) }],
+    audit: [],
+  };
+  const brennan: Household = {
+    id: "h-brennan",
+    name: "Brennan household",
+    createdAt: day(14),
+    members: {
+      adviser: joined("adviser", 14),
+      client: { status: "joined", name: "Liam Brennan", email: "liam@brennan.example", phone: "(214) 555-0171", joinedAt: day(14), someoneElse: true },
+      cpa: { status: "invited", ...PEOPLE.cpa, invite: { token: "b7cpa2q9", createdAt: day(15), expiresAt: day(22) } },
+      attorney: joined("attorney", 15),
+    },
+    consent: { ...signed(14), typedName: "Liam Brennan" },
+    adviserShares: true,
+    folders: [
+      { id: "b-adviser", owner: "adviser", name: "Plan documents", grants: ["attorney"] },
+      { id: "b-client", owner: "client", name: "Statements", grants: [] },
+      { id: "b-cpa", owner: "cpa", name: "Tax returns", grants: [] },
+      { id: "b-attorney", owner: "attorney", name: "Estate documents", grants: ["adviser"] },
+    ],
+    files: [{ id: "bx1", folderId: "b-attorney", name: "Pour-over will.pdf", size: "640 KB", uploadedBy: "attorney", at: day(16), sampleId: "will" }],
+    requests: [],
+    threads: [{ id: "b-team", members: ["adviser", "client", "attorney"], title: "Whole team" }],
+    messages: [],
+    audit: [],
+  };
   return {
     part: 2,
     view: "adviser",
     adviserAuth: "in",
     adviser: ADVISER,
-    households: [harper, other("h-okafor", "Okafor household", 9), other("h-brennan", "Brennan household", 14)],
+    adviserShares: true,
+    households: [harper, okafor, brennan],
+    open: {},
     n: 100,
   };
 }
