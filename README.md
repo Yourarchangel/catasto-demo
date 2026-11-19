@@ -1,87 +1,77 @@
-# Catasto demo (V1.1)
+# Catasto MVP demo (V2)
 
-Catasto gives a client's planning team (financial planner, CPA, estate attorney and the client) one shared, client-authorized record. This repo is the clickable MVP demo used for the SMU Hilltop pitch. It runs entirely in the browser on a fictional household (the Harpers). There is no back end yet.
+Front-end demo of the Catasto MVP, built for the backend handoff. One secure record per household for the adviser, the client, the CPA and the estate attorney. The client controls who sees what.
 
-**Every name, number and document in this repo is invented. No real client data.**
+Everything runs in the browser with **fictional data only**. There is no backend yet: state lives in memory and resets on reload. The screens call one API file, `src/lib/core/api.ts`, so the backend can replace it function by function.
 
-## What it does
-
-Three core features, plus three supports:
-
-| Feature | What it does |
-| --- | --- |
-| File Sharing | Folders per household (Tax, Estate, Insurance, Investments). Upload, view, download. Every file shows who can see it. |
-| Secure Message | A team thread plus direct messages. Text and file attachments. |
-| Consent Management | The client approves every person and every folder, and can revoke access at any time. |
-| Sign-in | Magic link plus a one-time code (simulated). |
-| Notifications | "You have something waiting." Never any client details. |
-| Activity log | Who uploaded, viewed, shared, approved or removed what, and when. |
-
-There are four apps on one code base: planner, CPA and attorney (desktop), and client (phone first). A demo bar at the top switches between them and can simulate the other side's replies.
-
-## Consent rules built into the code
-
-All of these live in `src/lib/demo/rules.ts` and `src/lib/demo/store.ts`:
-
-- **Reg S-P (SEC):** a professional sees nothing in a household until the clients approve them.
-- **IRC 7216 (IRS):** when the CPA uploads to the Tax folder, the file is held from the other professionals until both spouses sign a 7216 consent.
-- **ABA Model Rule 1.6:** attorney files are private by default. Sharing one shows a privilege warning and needs client approval.
-- Removing a person or a folder ends access immediately. Anything held or blocked shows the rule behind it in one line.
+Companion documents: *Catasto MVP 1-Pager* and *Catasto MVP Architecture (C4), Draft 2*.
 
 ## Run it
 
-Needs Node.js 20 or newer.
-
 ```bash
 npm install
-npm run dev
+npm run dev      # http://localhost:3000
+npm run build    # production build
+npm run lint
 ```
 
-Then open http://localhost:3000. `npm run build` and `npm run lint` should both pass clean.
+> Next.js is pinned to 16.4.6, the latest patched 16.x as of Nov 19, 2026. Keep it current.
 
-Click **Take the guided tour** for the five-step flow: the planner adds a household, the client approves the planner, the client invites the CPA and attorney, the CPA shares the return and the clients sign 7216, and the team messages in one place.
+## Walk the demo
 
-## Stack
+A thin black bar at the top holds the only demo controls: **Part 1: Onboarding**, **Part 2: Daily work**, and a small **view as** switch (Adviser, Client, CPA, Attorney). A one-line hint says what to do next. Click any empty field to fill in a sample value.
 
-- Next.js 16 (App Router, TypeScript), rendered client-side only
-- Tailwind CSS v4 with brand tokens in `src/app/globals.css`
-- shadcn/ui components (`src/components/ui/`), Lucide icons, sonner toasts
-- pdf-lib for generating sample PDFs in the browser
-- Self-hosted fonts (Instrument Serif and Instrument Sans)
+**Part 1: Onboarding** (starts empty)
 
-## Where things live
+1. Adviser signs in: email and password, then the authenticator code (click the boxes).
+2. Adviser creates a household: household name, client name, email, phone.
+3. Adviser opens the household, goes to **Team** and invites the Client. A one-use, 7-day link appears.
+4. Switch to **Client**: accept the invite, create an account, set up the authenticator.
+5. Client signs the **information sharing consent** and chooses: ask me each time, or let my professionals see each other's folders (sweeping consent).
+6. Switch to **Adviser**: invite the CPA and the Attorney.
+7. Switch to **CPA**, then **Attorney**: each accepts, signs up and sets up MFA.
+
+**Part 2: Daily work** (a whole team already set up)
+
+- Upload sample planning documents (or a real file from your computer, kept in the tab only).
+- Create folders in your own workspace and ask to share them.
+- Request access to another workspace's folder; switch to **Client** and approve it under **Access**.
+- Turn sweeping consent on or off, or tick who sees what.
+- Send secure messages, start a direct message or a group chat.
+
+## The rules
+
+- Each of the four roles has its own **workspace**. Only the owner adds files to it. Others can only view.
+- **Nobody sees another workspace unless the client allows it**, either folder by folder or with sweeping consent.
+- The client sees everything in their household and is the only one who approves, declines or changes access.
+- Locked folders are shown, not hidden, with a **Request access** button.
+- Nothing is visible to professionals until the client has signed the information sharing consent.
+
+## The 7 MVP features
+
+| Feature | Where |
+|---|---|
+| 1. Sign-in with MFA | `components/demo/auth.tsx` (`AdviserSignIn`, `JoinFlow`) |
+| 2. Household list and setup | `components/demo/households.tsx` |
+| 3. Invite a professional | `components/demo/team.tsx`, `api.invite`, `api.join` |
+| 4. Consent | `components/demo/auth.tsx` (`ClientConsent`), `components/demo/access.tsx`, `lib/core/rules.ts` |
+| 5. Files | `components/demo/files.tsx` |
+| 6. Messages | `components/demo/messages.tsx` |
+| 7. Audit log | `Household.audit` in `lib/core/api.ts` (no screen) |
+
+## Folder map
 
 ```
-src/lib/demo/
-  types.ts      data model (household, members, files, consents, messages, activity)
-  seed.ts       the fictional Harper household, two starting states
-  rules.ts      who can see what: the consent rules as code
-  store.ts      every action: upload, share, approve, revoke, message, sign in
-  simulate.ts   plays the other people for the demo
-  files.ts      real uploads, kept in the browser's IndexedDB
-src/components/app/
-  shell.tsx     desktop and phone layouts, sign-in, notifications
-  demo-bar.tsx  the demo controls (not part of the product)
-  tour.tsx      the five-step guided tour
-  splash.tsx    the opening screen
-  views/        Home, Files, Messages, Consent, Activity
+src/
+  app/                  layout, page, global styles (black and white tokens)
+  lib/core/             the "core" from the C4: replace with the backend
+    types.ts            data model (memberships, invites, consents, folders, items, audit)
+    rules.ts            the consent engine: canView, canUpload, canManageAccess
+    api.ts              every action the screens can take
+    seed.ts             Part 1 (empty) and Part 2 (full team) starting states
+    samples.ts          fictional sample documents
+  components/demo/      the screens (the "Catasto module")
+  components/ui/        dialog and button primitives (shadcn/ui)
 ```
 
-## What is simulated, and what a real version needs
-
-The demo keeps all state in the browser (localStorage and IndexedDB). For a pilot with real households, the main pieces to build are:
-
-1. **Auth:** real magic-link and MFA sign-in, with sessions per role.
-2. **Storage:** an encrypted file store and a database for households, members, consents and messages.
-3. **Server-side enforcement:** the rules in `rules.ts` need to run on the server, so a client can never fetch a file it is not allowed to see.
-4. **Audit log:** an append-only activity log kept on the server.
-5. **Notifications:** real email, text and push delivery, still with no client details.
-6. **E-signature** for the 7216 consent form.
-
-`rules.ts` and `types.ts` are the best starting point for a back-end design: they define the permission model the server has to enforce.
-
-## Other notes
-
-- `DEMO.md` covers the demo bar, the tour and how to run the pitch.
-- `CLAUDE.md` and `AGENTS.md` hold project conventions for AI coding tools.
-- Add `?film` to the URL to hide the demo bar for screen recordings.
+See `ARCHITECTURE.md` for how this maps to the C4 and what the backend must do.
