@@ -1,6 +1,6 @@
-import { DemoEntry } from "@/components/app/demo-entry";
+import DemoApp from "@/components/demo/app";
 
-// Catasto V.1 pitch demo: the fictional Harper household.
+// Catasto MVP demo. Fictional data only. See README.md and ARCHITECTURE.md.
 export default function Page() {
-  return <DemoEntry />;
+  return <DemoApp />;
 }

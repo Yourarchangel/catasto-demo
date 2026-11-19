@@ -1,174 +1,70 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /*
-  CATASTO BRAND TOKENS
-  Black and white, with Catasto blue as the one accent (focus, selection, "you").
-  Status colors always travel with an icon and a word. Color never carries meaning alone.
-  Every shadcn/ui component reads from these variables.
+  CATASTO MVP DEMO TOKENS
+  Black and white only. No accent color. Meaning comes from words and icons, never color.
+  shadcn/ui components read these variables.
 */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--foreground);
+  --color-primary: var(--foreground);
+  --color-primary-foreground: var(--background);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  --color-accent: var(--muted);
+  --color-accent-foreground: var(--foreground);
+  --color-destructive: var(--foreground);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-canvas: var(--canvas);
-  --color-paper: var(--paper);
-  --color-paper-ink: var(--paper-ink);
-  --color-paper-rule: var(--paper-rule);
-  --color-brand: var(--brand);
-  --color-brand-soft: var(--brand-soft);
-  --color-brand-ink: var(--brand-ink);
-  --color-wait: var(--wait);
-  --color-wait-soft: var(--wait-soft);
-  --color-ok: var(--ok);
-  --color-ok-soft: var(--ok-soft);
-  --color-pin: var(--pin);
-  --color-pin-soft: var(--pin-soft);
-  --color-demo: var(--demo);
-  --color-demo-ink: var(--demo-ink);
-  --color-demo-line: var(--demo-line);
+  --color-input: var(--border-strong);
+  --color-ring: var(--foreground);
+  --color-strong: var(--border-strong);
   --font-sans: var(--font-sans-brand);
-  --font-serif: var(--font-serif-brand);
   --font-display: var(--font-display-brand);
   --font-mono: var(--font-mono-brand);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 }
 
 :root {
-  /* Matched to the website (catasto-site/assets/css/site.css). */
-  --radius: 0.625rem; /* 10px, as on the site */
-  --background: #f6f5f1; /* warm paper, Harvey-like restraint */
-  --foreground: #171614; /* warm ink */
+  --radius: 8px;
+  --background: #ffffff;
+  --foreground: #000000;
   --card: #ffffff;
-  --card-foreground: #161616;
-  --popover: #ffffff;
-  --popover-foreground: #161616;
-  --primary: #000000; /* black buttons, as on the site */
-  --primary-foreground: #ffffff;
-  --secondary: #efede7; /* --paper */
-  --secondary-foreground: #161616;
-  --muted: #efede7;
-  --muted-foreground: #66635c; /* --muted */
-  --accent: #ebe9e2;
-  --accent-foreground: #000000;
-  --destructive: #d93a2f;
-  --border: #e3e0d8; /* --rule */
-  --input: #dcd9d0;
-  --ring: #6bc2fb;
-  --chart-1: #3d3d3d;
-  --chart-2: #6e6e6e;
-  --chart-3: #a3a3a3;
-  --chart-4: #c9c9c5;
-  --chart-5: #e2e2df;
-
-  --canvas: #f6f5f1;
-  --ink: #171614; /* the dark rail and feature tiles */
-  --ink-2: #22201d;
-  --ink-line: rgba(255, 255, 255, 0.09);
-  --paper: #ffffff; /* documents */
-  --paper-ink: #161616;
-  --paper-rule: #e2e2df;
-  --brand: #6bc2fb; /* the one accent */
-  --brand-soft: rgba(107, 194, 251, 0.14);
-  --brand-ink: #161616;
-  /* Status stays black and white, like the site's chips. Meaning comes from the word. */
-  --wait: #161616;
-  --wait-soft: #f5f5f3;
-  --ok: #000000;
-  --ok-soft: #f5f5f3;
-  --pin: #000000;
-  --pin-soft: rgba(107, 194, 251, 0.16);
-
-  /* The demo bar is deliberately not the product: dark, dashed, monospace. */
-  --demo: #1d1c19;
-  --demo-ink: #f2f1ec;
-  --demo-line: #f2c94c;
-}
-
-.dark {
-  --background: #121212;
-  --foreground: #f2f2f0;
-  --card: #1a1a1a;
-  --card-foreground: #f2f2f0;
-  --popover: #1c1c1c;
-  --popover-foreground: #f2f2f0;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #242424;
-  --secondary-foreground: #f2f2f0;
-  --muted: #242424;
-  --muted-foreground: #a3a3a0;
-  --accent: #262626;
-  --accent-foreground: #ffffff;
-  --destructive: #ff6b5f;
-  --border: rgba(255, 255, 255, 0.12);
-  --input: rgba(255, 255, 255, 0.16);
-  --ring: #6bc2fb;
-  --canvas: #0e0e0e;
-  --paper: #1c1c1c;
-  --paper-ink: #ededeb;
-  --paper-rule: rgba(255, 255, 255, 0.12);
-  --brand-soft: rgba(107, 194, 251, 0.16);
-  --brand-ink: #ededeb;
-  --wait: #ededeb;
-  --wait-soft: #242424;
-  --ok: #ffffff;
-  --ok-soft: #242424;
-  --pin: #ffffff;
-  --pin-soft: rgba(107, 194, 251, 0.18);
-  --demo: #0b0b0a;
+  --muted: #f4f4f4;
+  --muted-foreground: #6b6b6b;
+  --border: #e6e6e6;
+  --border-strong: #cfcfcf;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   html {
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-canvas text-foreground font-sans;
+    @apply bg-background text-foreground font-sans;
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
   }
   :focus-visible {
-    outline: 2px solid var(--foreground);
-    outline-offset: 3px;
+    outline: 2px solid #000;
+    outline-offset: 2px;
     border-radius: 4px;
   }
-  main:focus,
-  main:focus-visible,
   [role="dialog"]:focus-visible {
     outline: none;
-  }
-  .tabular {
-    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -177,161 +73,6 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
-}
-
-/* Pinned finding highlight inside a document */
-.pin-target {
-  background: var(--pin-soft);
-  box-shadow: inset 3px 0 0 var(--brand);
-}
-.pin-hover:hover {
-  background: var(--brand-soft);
-  cursor: crosshair;
-}
-
-/* Tour spotlight */
-.tour-ring {
-  box-shadow:
-    0 0 0 4px var(--brand),
-    0 0 0 9999px rgb(10 12 16 / 0.55);
-  border-radius: 10px;
-  transition: all 220ms ease;
-}
-
-@keyframes push-in {
-  from {
-    transform: translateY(-120%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-.push-in {
-  animation: push-in 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-@keyframes flash-row {
-  from {
-    background: var(--brand-soft);
-  }
-  to {
-    background: transparent;
-  }
-}
-.flash-row {
-  animation: flash-row 1.6s ease-out;
-}
-
-/* Titles in Instrument Serif, as on the website */
-.font-display {
-  font-family: var(--font-display-brand);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-/* ---------- v2 surfaces and motion ---------- */
-/* Panels: white on the warm canvas, a hairline rule and a soft lift. */
-.panel {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 0.875rem;
-  box-shadow: 0 1px 0 rgb(23 22 20 / 0.03);
-}
-@layer components {
-/* Warm near-black surfaces with a faint film grain, after the website hero and Harvey's product pages. */
-.ink {
-  isolation: isolate;
-  background-color: var(--ink);
-  color: #f4f2ec;
-}
-.ink::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-.ink-glow {
-  background-image: radial-gradient(110% 90% at 100% 0%, rgb(107 194 251 / 0.16), transparent 60%);
-}
-}
-/* Small caps label above titles, like a registry heading. */
-.eyebrow {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.dark .panel {
-  box-shadow: none;
-}
-/* The dark band, as on the website's security section. Used once per screen for what matters most. */
-.band-dark {
-  background: #0d0d0d;
-  color: #f4f4f2;
-  border-radius: 1rem;
-  background-image: radial-gradient(120% 140% at 100% 0%, rgb(107 194 251 / 0.16), transparent 55%);
-}
-.dark .band-dark {
-  background-color: #1b1b1b;
-}
-/* Page header band bleeds to the edges of the content column. */
-.page-band {
-  background: transparent;
-}
-/* One orchestrated motion: each screen rises into place when you arrive. */
-@keyframes view-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.view-in {
-  animation: view-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes splash-out {
-  to {
-    opacity: 0;
-    transform: scale(1.015);
-    visibility: hidden;
-  }
-}
-.splash-out {
-  animation: splash-out 700ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.rise {
-  opacity: 0;
-  animation: rise 800ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-}
-@keyframes dash-flow {
-  to {
-    stroke-dashoffset: -24;
-  }
-}
-.flow-dash {
-  stroke-dasharray: 3 5;
-  animation: dash-flow 1.6s linear infinite;
 }
