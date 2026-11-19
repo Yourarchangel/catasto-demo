@@ -1,22 +1,25 @@
 "use client";
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import type { DemoState, Household, Role } from "@/lib/core/types";
 import { ROLE_LABEL, ROLES } from "@/lib/core/types";
-import { openHousehold, setView, startPart, useDemo } from "@/lib/core/api";
-import { isJoined, pendingRequests } from "@/lib/core/rules";
+import { openHousehold, setAdviserSharing, setView, startPart, useDemo } from "@/lib/core/api";
+import { isMine, pendingRequests } from "@/lib/core/rules";
 import { AdviserSignIn, ClientConsent, JoinFlow } from "./auth";
 import { HouseholdList } from "./households";
 import { FilesTab } from "./files";
 import { MessagesTab } from "./messages";
 import { AccessTab } from "./access";
 import { TeamTab } from "./team";
-import { Logo } from "./ui";
+import { Logo, Modal, Switch } from "./ui";
 import { cn } from "@/lib/utils";
 
 // The one line of guidance in Part 1: what to do next. Nothing else.
 function hint(s: DemoState): string {
-  if (s.part === 2) return "Everyone is set up. Upload, share, approve and message from any view.";
+  if (s.part === 2)
+    return s.households.some((h) => h.members.cpa.status === "invited")
+      ? "Everyone is set up. Switch to CPA to see more than one household and accept a new invite."
+      : "Everyone is set up. Upload, share, approve and message from any view.";
   if (s.adviserAuth !== "in") return "Click the fields to fill them in.";
   const h = s.households[0];
   if (!h) return "Create a household.";
@@ -53,13 +56,33 @@ function DemoBar({ s }: { s: DemoState }) {
   );
 }
 
-function Header({ me }: { me: Role }) {
+function Header({ me, shares }: { me: Role; shares: boolean }) {
+  const [open, setOpen] = useState(false);
   return (
     <header className="border-b">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-5">
         <Logo />
-        <span className="text-[0.8rem] text-muted-foreground">Signed in as {ROLE_LABEL[me]}</span>
+        <span className="flex items-center gap-3 text-[0.8rem] text-muted-foreground">
+          Signed in as {ROLE_LABEL[me]}
+          {me === "adviser" && (
+            <button onClick={() => setOpen(true)} aria-label="Settings" className="rounded-md p-1.5 text-foreground transition-colors hover:bg-muted">
+              <Settings className="size-4" aria-hidden />
+            </button>
+          )}
+        </span>
       </div>
+      {open && (
+        <Modal open onClose={() => setOpen(false)} title="Settings" desc="Applies to every household.">
+          <div className="flex items-center gap-4 rounded-lg border p-4">
+            <div className="flex-1">
+              <p className="text-sm font-medium">Share my workspace with the team</p>
+              <p className="text-[0.8rem] text-muted-foreground">{shares ? "On: professionals the client approves can see your workspace. The client controls who." : "Off: your workspace is locked. Only you and the client can see it."}</p>
+            </div>
+            <Switch on={shares} label="Share my workspace with the team" onChange={setAdviserSharing} />
+          </div>
+          <p className="text-[0.75rem] text-muted-foreground">You can lock your own workspace. You can&apos;t give anyone access. That&apos;s always the client&apos;s choice.</p>
+        </Modal>
+      )}
     </header>
   );
 }
@@ -82,9 +105,9 @@ function HouseholdView({ h, me, back }: { h: Household; me: Role; back: boolean 
       <h1 className="font-display text-[2.4rem] leading-none tracking-tight">{h.name}</h1>
       <nav className="mt-6 mb-6 flex gap-6 border-b" aria-label="Household">
         {tabs.map(([t, label, n]) => (
-          <button key={t} onClick={() => setTab(t)} aria-current={cur === t ? "page" : undefined} className={cn("-mb-px border-b-2 pb-2.5 text-sm", cur === t ? "border-foreground font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
+          <button key={t} onClick={() => setTab(t)} aria-current={cur === t ? "page" : undefined} className={cn("-mb-px border-b-2 pb-2.5 text-sm transition-colors", cur === t ? "border-foreground font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
             {label}
-            {!!n && <span className="ml-1.5 rounded-full bg-foreground px-1.5 text-[0.68rem] text-background">{n}</span>}
+            {!!n && <span className="ml-1.5 rounded-full bg-brand px-1.5 text-[0.68rem] font-semibold text-foreground">{n}</span>}
           </button>
         ))}
       </nav>
@@ -99,7 +122,7 @@ function HouseholdView({ h, me, back }: { h: Household; me: Role; back: boolean 
 function Screen({ s }: { s: DemoState }) {
   const me = s.view;
   if (me === "adviser" && s.adviserAuth !== "in") return <AdviserSignIn step={s.adviserAuth} />;
-  const mine = me === "adviser" ? s.households : s.households.filter((h) => isJoined(h, me));
+  const mine = me === "adviser" ? s.households : s.households.filter((h) => isMine(h, me));
   if (me !== "adviser" && mine.length === 0) {
     const invited = s.households.find((h) => h.members[me].status === "invited");
     if (invited) return <JoinFlow key={`${invited.id}-${me}`} h={invited} role={me} />;
@@ -113,12 +136,13 @@ function Screen({ s }: { s: DemoState }) {
     );
   }
   if (me === "client" && mine[0] && !mine[0].consent) return <ClientConsent h={mine[0]} />;
-  // the adviser picks from a list; everyone else sees their household directly when they have one
-  const open = mine.find((h) => h.id === s.openHouseholdId) ?? (me !== "adviser" && mine.length === 1 ? mine[0] : undefined);
+  // Advisers, CPAs and attorneys work with many households, so their home is the list.
+  // A client usually has one, so they go straight in.
+  const open = mine.find((h) => h.id === s.open[me]) ?? (me === "client" && mine.length === 1 ? mine[0] : undefined);
   return (
     <>
-      <Header me={me} />
-      <main className="mx-auto max-w-5xl px-5 py-10">{open ? <HouseholdView key={`${open.id}-${me}`} h={open} me={me} back={me === "adviser" || mine.length > 1} /> : <HouseholdList role={me} households={s.households} />}</main>
+      <Header me={me} shares={s.adviserShares} />
+      <main className="mx-auto max-w-5xl px-5 py-10">{open ? <HouseholdView key={`${open.id}-${me}`} h={open} me={me} back={me !== "client" || mine.length > 1} /> : <HouseholdList role={me} households={s.households} />}</main>
     </>
   );
 }

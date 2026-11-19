@@ -4,8 +4,7 @@ import type { Household, Role } from "@/lib/core/types";
 import { ROLE_LABEL } from "@/lib/core/types";
 import { decide, setGrant, setSweeping } from "@/lib/core/api";
 import { isJoined, pendingRequests } from "@/lib/core/rules";
-import { Btn, Empty, Panel, when } from "./ui";
-import { cn } from "@/lib/utils";
+import { Btn, Empty, Panel, Switch, when } from "./ui";
 
 const PROS: Role[] = ["adviser", "cpa", "attorney"];
 
@@ -22,7 +21,7 @@ export function AccessTab({ h }: { h: Household }) {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-3 border-b pb-2 text-[1.05rem] font-semibold">Requests {reqs.length > 0 && <span className="ml-1 rounded-full bg-foreground px-2 py-0.5 text-[0.7rem] text-background">{reqs.length}</span>}</h2>
+        <h2 className="mb-3 border-b pb-2 text-[1.05rem] font-semibold">Requests {reqs.length > 0 && <span className="ml-1 rounded-full bg-brand px-2 py-0.5 text-[0.7rem] font-semibold text-foreground">{reqs.length}</span>}</h2>
         {reqs.length === 0 ? (
           <Empty>Nothing to approve.</Empty>
         ) : (
@@ -66,15 +65,7 @@ export function AccessTab({ h }: { h: Household }) {
             <p className="text-sm font-medium">Let my professionals see each other&apos;s folders without asking me</p>
             <p className="text-[0.8rem] text-muted-foreground">Off means you approve each folder for each person.</p>
           </div>
-          <button
-            role="switch"
-            aria-checked={sweeping}
-            aria-label="Sweeping consent"
-            onClick={() => setSweeping(h.id, "client", !sweeping)}
-            className={cn("relative h-6 w-11 shrink-0 rounded-full border border-foreground transition-colors", sweeping ? "bg-foreground" : "bg-background")}
-          >
-            <span className={cn("absolute top-0.5 size-4.5 rounded-full transition-all", sweeping ? "left-[22px] bg-background" : "left-0.5 bg-foreground")} />
-          </button>
+          <Switch on={sweeping} label="Sweeping consent" onChange={(v) => setSweeping(h.id, "client", v)} />
         </Panel>
       </section>
 
@@ -96,7 +87,7 @@ export function AccessTab({ h }: { h: Household }) {
               {h.folders
                 .filter((f) => isJoined(h, f.owner))
                 .map((f) => (
-                  <tr key={f.id} className="border-b last:border-0">
+                  <tr key={f.id} className="border-b transition-colors last:border-0 hover:bg-muted/50">
                     <td className="px-4 py-2.5">
                       <span className="font-medium">{f.name}</span>
                       <span className="block text-[0.72rem] text-muted-foreground">{ROLE_LABEL[f.owner]} workspace</span>
@@ -105,13 +96,15 @@ export function AccessTab({ h }: { h: Household }) {
                       <td key={r} className="px-4 py-2.5 text-center">
                         {f.owner === r ? (
                           <span className="text-[0.75rem] text-muted-foreground">Owner</span>
+                        ) : f.owner === "adviser" && !h.adviserShares ? (
+                          <span className="text-[0.75rem] text-muted-foreground">Locked by Adviser</span>
                         ) : !isJoined(h, r) ? (
                           <span className="text-[0.75rem] text-muted-foreground">Not joined</span>
                         ) : (
                           <input
                             type="checkbox"
                             aria-label={`${ROLE_LABEL[r]} can see ${f.name}`}
-                            className="size-4 accent-black"
+                            className="size-4 accent-brand"
                             disabled={sweeping}
                             checked={sweeping || f.grants.includes(r)}
                             onChange={(e) => setGrant(h.id, "client", f.id, r, e.target.checked)}

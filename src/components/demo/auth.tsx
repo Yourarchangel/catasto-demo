@@ -24,7 +24,7 @@ function CodeBoxes({ value, onFill }: { value: string; onFill: () => void }) {
   return (
     <button type="button" onClick={onFill} className="flex w-full justify-between gap-2" aria-label={value ? `Code ${value}` : "Click to fill the code"}>
       {Array.from({ length: 6 }).map((_, i) => (
-        <span key={i} className={cn("flex h-12 flex-1 items-center justify-center rounded-md border text-lg font-semibold tabular-nums", value ? "border-foreground" : "border-strong text-muted-foreground")}>
+        <span key={i} style={value ? { animationDelay: `${i * 40}ms` } : undefined} className={cn("flex h-12 flex-1 items-center justify-center rounded-md border text-lg font-semibold tabular-nums transition-colors", value ? "pop border-brand bg-brand-soft" : "border-strong text-muted-foreground hover:border-brand")}>
           {value[i] ?? ""}
         </span>
       ))}
@@ -164,7 +164,7 @@ export function ClientConsent({ h }: { h: Household }) {
       <p className="mt-2 mb-6 text-sm text-muted-foreground">One time, before anyone on your team can see your documents.</p>
       <Panel className="p-5 text-sm leading-relaxed">{CONSENT_TEXT}</Panel>
       <label className="mt-4 flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-0.5 size-4 accent-black" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+        <input type="checkbox" className="mt-0.5 size-4 accent-brand" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
         I have read and agree.
       </label>
       <fieldset className="mt-6">
@@ -174,8 +174,8 @@ export function ClientConsent({ h }: { h: Household }) {
             [false, "Ask me each time", "You approve every request."],
             [true, "Let them see each other's folders", "Your adviser, CPA and attorney can see each other's folders without asking. You can change this later."],
           ].map(([v, t, d]) => (
-            <label key={String(v)} className={cn("flex cursor-pointer gap-3 rounded-md border p-3", sweeping === v ? "border-foreground" : "border-strong")}>
-              <input type="radio" name="sweep" className="mt-1 accent-black" checked={sweeping === v} onChange={() => setSweeping(v as boolean)} />
+            <label key={String(v)} className={cn("flex cursor-pointer gap-3 rounded-md border p-3 transition-colors", sweeping === v ? "border-brand bg-brand-soft" : "border-strong hover:border-foreground/40")}>
+              <input type="radio" name="sweep" className="mt-1 accent-brand" checked={sweeping === v} onChange={() => setSweeping(v as boolean)} />
               <span>
                 <span className="block text-sm font-medium">{t as string}</span>
                 <span className="block text-[0.8rem] text-muted-foreground">{d as string}</span>

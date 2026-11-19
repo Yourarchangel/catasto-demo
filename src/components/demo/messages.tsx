@@ -5,7 +5,7 @@ import type { Household, Role, Thread } from "@/lib/core/types";
 import { ROLE_LABEL, ROLES } from "@/lib/core/types";
 import { openThread, send } from "@/lib/core/api";
 import { isJoined, threadsFor } from "@/lib/core/rules";
-import { Btn, Empty, Modal, when } from "./ui";
+import { Btn, Empty, Modal, fresh, when } from "./ui";
 import { cn } from "@/lib/utils";
 
 const name = (t: Thread, me: Role) => t.title ?? t.members.filter((r) => r !== me).map((r) => ROLE_LABEL[r]).join(", ");
@@ -39,7 +39,7 @@ export function MessagesTab({ h, me }: { h: Household; me: Role }) {
                     setSel(t.id);
                     setMobileOpen(true);
                   }}
-                  className={cn("w-full px-4 py-3 text-left", cur?.id === t.id ? "bg-muted" : "hover:bg-muted/60")}
+                  className={cn("w-full border-l-2 px-4 py-3 text-left transition-colors", cur?.id === t.id ? "border-brand bg-muted" : "border-transparent hover:bg-muted/60")}
                 >
                   <span className="block text-sm font-medium">{name(t, me)}</span>
                   <span className="block truncate text-[0.75rem] text-muted-foreground">{last(t) ? `${last(t)!.by === me ? "You" : ROLE_LABEL[last(t)!.by]}: ${last(t)!.text}` : "No messages yet"}</span>
@@ -104,7 +104,7 @@ function Conversation({ h, me, t, onBack }: { h: Household; me: Role; t: Thread;
                 <p className="mb-0.5 text-[0.7rem] text-muted-foreground">
                   {mine ? "You" : ROLE_LABEL[m.by]} · {when(m.at)}
                 </p>
-                <p className={cn("inline-block rounded-lg px-3 py-2 text-left text-sm", mine ? "bg-foreground text-background" : "border")}>{m.text}</p>
+                <p className={cn("inline-block rounded-lg px-3 py-2 text-left text-sm", mine ? "bg-foreground text-background" : "border", fresh(m.at) && "pop")}>{m.text}</p>
               </div>
             </div>
           );
@@ -139,8 +139,8 @@ function NewMessage({ h, me, onClose, onPick }: { h: Household; me: Role; onClos
         {others.map((r) => {
           const ok = isJoined(h, r);
           return (
-            <label key={r} className={cn("flex items-center gap-3 rounded-md border px-3 py-2.5 text-sm", !ok && "opacity-40", pick.includes(r) ? "border-foreground" : "border-strong")}>
-              <input type="checkbox" className="accent-black" disabled={!ok} checked={pick.includes(r)} onChange={(e) => setPick((p) => (e.target.checked ? [...p, r] : p.filter((x) => x !== r)))} />
+            <label key={r} className={cn("flex items-center gap-3 rounded-md border px-3 py-2.5 text-sm", !ok && "opacity-40", pick.includes(r) ? "border-brand bg-brand-soft" : "border-strong")}>
+              <input type="checkbox" className="accent-brand" disabled={!ok} checked={pick.includes(r)} onChange={(e) => setPick((p) => (e.target.checked ? [...p, r] : p.filter((x) => x !== r)))} />
               <span className="flex-1">{ROLE_LABEL[r]}</span>
               {!ok && <span className="text-[0.72rem]">Not joined</span>}
             </label>

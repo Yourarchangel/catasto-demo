@@ -30,13 +30,44 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 
+// A light tap on phones that support it. Silent everywhere else.
+export function tap() {
+  try {
+    if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) navigator.vibrate?.(8);
+  } catch {}
+}
+
+// Newly added things glow blue once, then settle.
+export const fresh = (iso: string) => Date.now() - new Date(iso).getTime() < 4000;
+
+export function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={() => {
+        tap();
+        onChange(!on);
+      }}
+      className={cn("relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200", on ? "border-brand bg-brand" : "border-strong bg-muted")}
+    >
+      <span className={cn("absolute top-[3px] size-4 rounded-full bg-background shadow-[0_1px_2px_rgb(0_0_0/0.25)] transition-[left] duration-300 ease-snap", on ? "left-[23px]" : "left-[3px]")} />
+    </button>
+  );
+}
+
 type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "solid" | "outline" | "ghost"; size?: "sm" | "md" };
-export function Btn({ variant = "solid", size = "md", className, ...p }: BtnProps) {
+export function Btn({ variant = "solid", size = "md", className, onClick, ...p }: BtnProps) {
   return (
     <button
       {...p}
+      onClick={(e) => {
+        tap();
+        onClick?.(e);
+      }}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-[transform,background-color,border-color] duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100",
         size === "md" ? "h-10 px-4 text-sm" : "h-8 px-3 text-[0.8rem]",
         variant === "solid" && "bg-foreground text-background hover:bg-foreground/85",
         variant === "outline" && "border border-strong bg-background hover:bg-muted",
@@ -64,7 +95,7 @@ export function Field({ label, value, onChange, sample, type = "text", autoFocus
         onFocus={() => !value && sample && onChange(sample)}
         onClick={() => !value && sample && onChange(sample)}
         placeholder={sample ? "Click to fill" : undefined}
-        className="h-10 w-full rounded-md border border-strong bg-background px-3 text-sm placeholder:text-muted-foreground/70 focus:border-foreground focus:outline-none"
+        className="h-10 w-full rounded-md border border-strong bg-background px-3 text-sm transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-brand focus:shadow-[0_0_0_3px_var(--brand-soft)] focus:outline-none"
       />
     </div>
   );
@@ -84,7 +115,7 @@ export function Panel({ className, ...p }: React.HTMLAttributes<HTMLDivElement>)
 }
 
 export function Pill({ children, solid }: { children: React.ReactNode; solid?: boolean }) {
-  return <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-medium", solid ? "border-foreground bg-foreground text-background" : "border-strong")}>{children}</span>;
+  return <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-medium", solid ? "border-brand bg-brand-soft text-foreground" : "border-strong")}>{children}</span>;
 }
 
 export function RoleChip({ r }: { r: Role }) {

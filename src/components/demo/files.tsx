@@ -6,7 +6,7 @@ import { ROLE_LABEL, ROLES } from "@/lib/core/types";
 import { createFolder, requestAccess, upload, viewFile } from "@/lib/core/api";
 import { canUpload, canView, consentSigned, isJoined, pendingFor } from "@/lib/core/rules";
 import { SAMPLES, sampleById } from "@/lib/core/samples";
-import { Btn, Field, Modal, Pill } from "./ui";
+import { Btn, Field, Modal, Pill, fresh } from "./ui";
 import { cn } from "@/lib/utils";
 
 const ORDER = (me: Role) => [me, ...ROLES.filter((r) => r !== me)];
@@ -52,6 +52,7 @@ function Workspace({ h, me, owner }: { h: Household; me: Role; owner: Role }) {
 }
 
 function sharedLine(h: Household, f: Folder, me: Role) {
+  if (f.owner === "adviser" && !h.adviserShares) return me === "adviser" ? "Locked by you. Only you and the Client can see it." : "Can see it: Adviser, You";
   const pros = h.consent?.sweeping ? ROLES.filter((r) => r !== "client" && isJoined(h, r)) : f.grants;
   const who = [...new Set<Role>([f.owner, "client", ...pros])];
   return "Can see it: " + who.map((r) => (r === me ? "You" : ROLE_LABEL[r])).join(", ");
@@ -70,10 +71,10 @@ function FolderCard({ h, me, f }: { h: Household; me: Role; f: Folder }) {
         <div className="min-w-0 flex-1">
           <p className="font-medium">{f.name}</p>
           <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
-            {!consentSigned(h) ? "Locked until the client signs the information sharing consent." : "Locked. The client decides who sees this folder."}
+            {!consentSigned(h) ? "Locked until the client signs the information sharing consent." : f.owner === "adviser" && !h.adviserShares ? "The Adviser has locked this workspace." : "Locked. The client decides who sees this folder."}
           </p>
         </div>
-        {consentSigned(h) && (
+        {consentSigned(h) && !(f.owner === "adviser" && !h.adviserShares) && (
           <Btn size="sm" variant="outline" disabled={asked} onClick={() => requestAccess(h.id, me, f.id, me)}>
             {asked ? "Requested" : "Request access"}
           </Btn>
@@ -82,7 +83,7 @@ function FolderCard({ h, me, f }: { h: Household; me: Role; f: Folder }) {
     );
   }
   return (
-    <div className="rounded-lg border p-4">
+    <div className="rounded-lg border p-4 transition-shadow hover:shadow-[0_1px_8px_rgb(0_0_0/0.06)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">{f.name}</p>
@@ -97,7 +98,7 @@ function FolderCard({ h, me, f }: { h: Household; me: Role; f: Folder }) {
       <ul className="mt-3 divide-y border-t">
         {files.length === 0 && <li className="py-3 text-[0.8rem] text-muted-foreground">No files yet.</li>}
         {files.map((x) => (
-          <li key={x.id}>
+          <li key={x.id} className={cn("-mx-2 rounded px-2", fresh(x.at) && "arrive")}>
             <button onClick={() => viewFile(h.id, me, x.id) && setOpen(x)} className="flex w-full items-center gap-2.5 py-2.5 text-left text-sm hover:underline">
               <FileText className="size-4 shrink-0" aria-hidden />
               <span className="min-w-0 flex-1 truncate">{x.name}</span>
@@ -170,13 +171,13 @@ function NewFolder({ h, me, onClose }: { h: Household; me: Role; onClose: () => 
         }}
       >
         <Field label="Folder name" value={name} onChange={setName} sample={me === "cpa" ? "Estimated payments" : me === "attorney" ? "Powers of attorney" : me === "client" ? "Insurance" : "Meeting notes"} autoFocus />
-        {!sweeping && (
+        {!sweeping && me !== "adviser" && (
           <fieldset>
             <legend className="mb-2 text-[0.8rem] font-medium">Who else should see it?</legend>
             <div className="flex flex-wrap gap-2">
               {others.map((r) => (
-                <label key={r} className={cn("flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm", pick.includes(r) ? "border-foreground" : "border-strong")}>
-                  <input type="checkbox" className="accent-black" checked={pick.includes(r)} onChange={(e) => setPick((p) => (e.target.checked ? [...p, r] : p.filter((x) => x !== r)))} />
+                <label key={r} className={cn("flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm", pick.includes(r) ? "border-brand bg-brand-soft" : "border-strong")}>
+                  <input type="checkbox" className="accent-brand" checked={pick.includes(r)} onChange={(e) => setPick((p) => (e.target.checked ? [...p, r] : p.filter((x) => x !== r)))} />
                   {ROLE_LABEL[r]}
                 </label>
               ))}
@@ -184,7 +185,11 @@ function NewFolder({ h, me, onClose }: { h: Household; me: Role; onClose: () => 
           </fieldset>
         )}
         <p className="text-[0.8rem] text-muted-foreground">
-          {me === "client" ? "They'll see it right away." : sweeping ? "The client lets the team see each other's folders, so everyone can see it." : "The client always sees it. Anyone else waits for the client to approve."}
+          {me === "adviser"
+            ? h.adviserShares
+              ? "Your workspace is open to the team the client approves. Only the client changes who sees it."
+              : "Your workspace is locked. Only you and the Client will see it."
+            : me === "client" ? "They'll see it right away." : sweeping ? "The client lets the team see each other's folders, so everyone can see it." : "The client always sees it. Anyone else waits for the client to approve."}
         </p>
         <Btn className="w-full" disabled={!name}>
           Create folder
