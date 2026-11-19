@@ -19,6 +19,8 @@ npm run lint
 
 ## Walk the demo
 
+Black and white, with Catasto blue used sparingly: focus rings, switches that are on, count badges, the "You" tag, and a soft glow on anything just added. Buttons press in slightly and give a light tap on phones that support it.
+
 A thin black bar at the top holds the only demo controls: **Part 1: Onboarding**, **Part 2: Daily work**, and a small **view as** switch (Adviser, Client, CPA, Attorney). A one-line hint says what to do next. Click any empty field to fill in a sample value.
 
 **Part 1: Onboarding** (starts empty)
@@ -33,6 +35,7 @@ A thin black bar at the top holds the only demo controls: **Part 1: Onboarding**
 
 **Part 2: Daily work** (a whole team already set up)
 
+- Three households. The CPA works with Harper and Okafor and has a new invite to Brennan; the Attorney works with Harper and Brennan. Switch to **CPA** and click **Accept** to join Brennan with the same account.
 - Upload sample planning documents (or a real file from your computer, kept in the tab only).
 - Create folders in your own workspace and ask to share them.
 - Request access to another workspace's folder; switch to **Client** and approve it under **Access**.
@@ -46,6 +49,9 @@ A thin black bar at the top holds the only demo controls: **Part 1: Onboarding**
 - The client sees everything in their household and is the only one who approves, declines or changes access.
 - Locked folders are shown, not hidden, with a **Request access** button.
 - Nothing is visible to professionals until the client has signed the information sharing consent.
+- CPAs and attorneys can work with many households. Their home screen is the household list, and a new invite shows there with one-click **Accept** (no second sign-up). Each household keeps its own consent and access.
+- The adviser never controls access, not even to their own workspace. By default it is open to every professional who joins, and only the client can take that away, folder by folder.
+- In **Settings** (gear icon, Adviser view), the adviser can switch off "Share my workspace with the team" to lock it to just the adviser and the client. The adviser can lock, never grant.
 
 ## The 7 MVP features
 

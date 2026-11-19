@@ -24,11 +24,16 @@ This demo is the **browser app** and **Catasto module** from the MVP C4 (Draft 2
 | The client sees everything and is the only approver | `canView` (client), `canManageAccess` |
 | Professionals see another workspace's folder only if granted, or if sweeping consent is on | `canView`: `f.grants`, `consent.sweeping` |
 | Only the owner adds files to a folder | `canUpload` |
+| The adviser never grants access. Their workspace opens to each joining professional by default; the client can remove it | `api.join`, `api.createFolder` (adviser grants), `setGrant` |
+| The adviser can lock their own workspace (Settings), which overrides any grant | `Household.adviserShares` in `canView`, `api.setAdviserSharing` |
 | Locked folders are shown, with a request button, and return no files | `visibleFiles`, `FolderCard` |
 | Invites are one use and expire in 7 days | `api.invite`, `api.join` (checks `usedAt`) |
+| One CPA or attorney account can belong to many households; consent and access are per household | `api.acceptInvite`, `HouseholdList` |
 | Every view, upload, share and consent change is logged, including denials | `log()` and `viewFile()` in `api.ts` |
 
-Note: per the C4, a joining professional should also wait for the client to confirm them by name before anything opens. In this demo that confirmation is covered by folder approval, since a new professional starts with no access.
+Note on identity: the demo has one person per role, so `Member.someoneElse` marks the other households' clients. The real build links memberships to a `users` table, so one user can hold many memberships.
+
+Note: per the C4, a joining professional should also wait for the client to confirm them by name before anything opens. In this demo a new professional sees only the adviser's workspace (unless the adviser locked it) until the client grants more. Add the confirm-by-name step on the server.
 
 ## API surface to replace
 
@@ -39,9 +44,11 @@ Each function in `src/lib/core/api.ts` becomes one server call. The server check
 | `createHousehold` | Adviser |
 | `invite` | Adviser |
 | `join` | Holder of a valid, unused invite |
+| `acceptInvite` | A signed-in user with a valid invite to another household (reuses their account) |
 | `signConsent`, `setSweeping`, `setGrant`, `decide` | Client |
 | `requestAccess` | Any joined professional |
-| `createFolder`, `upload` | Owner of the workspace |
+| `createFolder`, `upload` | Owner of the workspace (the adviser cannot choose who sees a new folder) |
+| `setAdviserSharing` | Adviser (can only lock or reopen their own workspace) |
 | `viewFile` | Anyone `canView` allows (issues the 5-minute link) |
 | `openThread`, `send` | Joined members of the thread |
 

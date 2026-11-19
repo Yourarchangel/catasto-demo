@@ -7,14 +7,14 @@ Catasto gives a household's adviser, client, CPA and estate attorney one shared 
 ## Stack
 
 - Next.js (App Router, TypeScript, `src/` directory)
-- Tailwind CSS v4. Tokens live in `src/app/globals.css`. Black and white only; use token classes (`bg-foreground`, `text-muted-foreground`, `border-strong`).
+- Tailwind CSS v4. Tokens live in `src/app/globals.css`. Black and white, with Catasto blue (`bg-brand`, `border-brand`, `bg-brand-soft`) only as a sparing accent. Use token classes, never hex values.
 - shadcn/ui primitives in `src/components/ui/` (dialog, button).
 - All rules live in `src/lib/core/rules.ts`; all actions in `src/lib/core/api.ts`. Screens never change state directly.
 - Lucide icons via `lucide-react`. Use Lucide only, no other icon sets.
 
 ## Design rules
 
-- Brutally simple: black and white, no decoration. Instrument Serif for page titles, Instrument Sans for everything else.
+- Brutally simple: black and white, a few touches of blue (focus, on, counts, "You", new items), no other decoration. Instrument Serif for page titles, Instrument Sans for everything else.
 - Show roles (Adviser, Client, CPA, Attorney), not names, in permission screens.
 - The brand voice is calm, precise and plain, like a trusted advisor. Sentence case. No hype words.
 - No em dashes in UI copy or docs.
