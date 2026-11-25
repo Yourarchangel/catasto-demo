@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     ".standalone/**",
+    // AWS CDK app with its own tsconfig, dependencies and tests.
+    "infra/**",
   ]),
 ]);
 

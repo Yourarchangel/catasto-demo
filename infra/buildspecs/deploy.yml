@@ -1,0 +1,41 @@
+# Deploy stage, run once per stage. The pipeline sets STAGE, ACCOUNT and REGION.
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/infra" && npm ci
+
+  build:
+    commands:
+      # 1. Shared base stack, through the stage's CDK bootstrap roles.
+      - cd "$CODEBUILD_SRC_DIR/infra"
+      - npx cdk deploy "catasto-${STAGE}-base" --require-approval never --outputs-file /tmp/outputs.json
+      - API_URL=$(node -p "require('/tmp/outputs.json')['catasto-${STAGE}-base'].ApiUrl")
+
+      # 2. Switch to the stage's least-privilege service deployer.
+      - |
+        CREDS=$(aws sts assume-role \
+          --role-arn "arn:aws:iam::${ACCOUNT}:role/catasto-${STAGE}-service-deployer" \
+          --role-session-name "catasto-pipeline-${CODEBUILD_BUILD_NUMBER}" \
+          --query Credentials --output json)
+        export AWS_ACCESS_KEY_ID=$(echo "$CREDS" | node -pe 'JSON.parse(require("fs").readFileSync(0)).AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | node -pe 'JSON.parse(require("fs").readFileSync(0)).SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo "$CREDS" | node -pe 'JSON.parse(require("fs").readFileSync(0)).SessionToken')
+
+      # 3. Services changed since the last deployed commit (none exist yet).
+      - |
+        cd "$CODEBUILD_SRC_DIR"
+        if [ -f scripts/deploy-services.mjs ]; then
+          node scripts/deploy-services.mjs "$STAGE"
+        else
+          echo "No services to deploy yet"
+        fi
+
+      # 4. Smoke test.
+      - curl --fail --silent --show-error --retry 5 --retry-delay 5 "${API_URL}/health"

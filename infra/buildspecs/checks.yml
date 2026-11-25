@@ -1,0 +1,25 @@
+# Checks stage: nothing reaches AWS. Paths are relative to the repository root.
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/infra" && npm ci
+
+  build:
+    commands:
+      - cd "$CODEBUILD_SRC_DIR/infra"
+      - npm run typecheck
+      - npm test
+      # When services exist, regenerate their schemas here and fail on stale commits:
+      #   npm run schema && git diff --exit-code -- services
+      - npm run synth
+
+cache:
+  paths:
+    - /root/.npm/**/*
